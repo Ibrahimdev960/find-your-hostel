@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+/* Brand tokens — mirror packages/shared/src/theme/colors.ts (TS remains source for JS/mobile). */
+@theme {
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9eaff;
+  --color-brand-200: #bcdaff;
+  --color-brand-300: #8ec2ff;
+  --color-brand-400: #599fff;
+  --color-brand-500: #337bff;
+  --color-brand-600: #1d5cf5;
+  --color-brand-700: #1647e1;
+  --color-brand-800: #193cb6;
+  --color-brand-900: #1a378f;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-neutral-50 text-neutral-900 antialiased;
+}

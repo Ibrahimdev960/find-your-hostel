@@ -1,0 +1,10 @@
+{
+  "extends": "@findyourhostel/config-ts/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

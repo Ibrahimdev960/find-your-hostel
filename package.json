@@ -1,0 +1,30 @@
+{
+  "name": "find-your-hostel",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@findyourhostel/web",
+    "dev:admin": "turbo run dev --filter=@findyourhostel/admin",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "db:types": "supabase gen types typescript --local > packages/shared/src/types/database.types.ts"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.2"
+  },
+  "overrides": {
+    "@supabase/supabase-js": "2.45.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@11.12.1"
+}

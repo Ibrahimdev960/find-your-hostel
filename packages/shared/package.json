@@ -1,0 +1,47 @@
+{
+  "name": "@findyourhostel/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./lib": "./src/lib/index.ts",
+    "./config": "./src/config/index.ts",
+    "./theme": "./src/theme/index.ts",
+    "./types": "./src/types/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./store": "./src/store/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./api": "./src/api/index.ts",
+    "./features/auth": "./src/features/auth/index.ts",
+    "./features/auth/hooks": "./src/features/auth/hooks/index.ts",
+    "./features/student": "./src/features/student/index.ts",
+    "./features/student/hooks": "./src/features/student/hooks/index.ts",
+    "./features/owner": "./src/features/owner/index.ts",
+    "./features/owner/hooks": "./src/features/owner/hooks/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "@tanstack/react-query": "^5.59.0",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@findyourhostel/config-eslint": "*",
+    "@findyourhostel/config-ts": "*",
+    "@supabase/supabase-js": "^2.45.4",
+    "@tanstack/react-query": "^5.59.0",
+    "eslint": "^9.11.1",
+    "typescript": "^5.6.2",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.0"
+  }
+}

@@ -1,0 +1,2 @@
+-- Local seed data (runs after migrations on `supabase db reset`).
+-- Intentionally empty for M0 — seed users/hostels are added alongside their modules.

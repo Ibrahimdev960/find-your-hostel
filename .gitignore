@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+dist/
+build/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# supabase
+supabase/.branches
+supabase/.temp
+**/.supabase/
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# testing
+coverage/
