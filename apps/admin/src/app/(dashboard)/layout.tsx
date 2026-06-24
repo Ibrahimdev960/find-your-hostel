@@ -1,14 +1,37 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { AdminGuard } from '@/components/AdminGuard';
+import { createClient } from '@/lib/supabase/server';
 
 const NAV = [
   { href: '/', label: 'Dashboard' },
+  { href: '/owners', label: 'Owners' },
   { href: '/listings', label: 'Listings' },
+  { href: '/users', label: 'Users' },
+  { href: '/bookings', label: 'Bookings' },
+  { href: '/content', label: 'Content' },
   { href: '/reports', label: 'Reports' },
   { href: '/promotions', label: 'Promotions' },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Server-side enforcement (defence-in-depth beyond the client AdminGuard + RLS):
+  // no admin session → bounce to login before any admin UI renders.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'admin') redirect('/login');
+
   return (
     <AdminGuard>
       <div className="min-h-screen">

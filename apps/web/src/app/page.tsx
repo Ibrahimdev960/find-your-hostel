@@ -1,5 +1,6 @@
 import { SmokeTest } from '@/components/SmokeTest';
 import { HomeNav } from '@/components/HomeNav';
+import { RecommendedRow } from '@/components/search/RecommendedRow';
 
 export default function HomePage() {
   return (
@@ -22,6 +23,7 @@ export default function HomePage() {
       >
         Search hostels →
       </a>
+      <RecommendedRow />
       <SmokeTest />
     </main>
   );

@@ -1,11 +1,12 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Star, Check } from 'lucide-react';
-import { useHostelPublic } from '@findyourhostel/shared/features/student';
+import { useAuthStore } from '@findyourhostel/shared';
+import { useHostelPublic, useTrackHostelView } from '@findyourhostel/shared/features/student';
 import { formatRent, formatCurrency, computePriceBreakdown } from '@findyourhostel/shared';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +32,16 @@ const OCC_LABEL: Record<string, string> = {
 export default function HostelDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const hostel = useHostelPublic(id);
+  const { user } = useAuthStore();
+  const trackView = useTrackHostelView();
+
+  // Record the view for recommendations (students only; server ignores others).
+  const trackMutate = trackView.mutate;
+  useEffect(() => {
+    if (user?.role === 'student' && hostel.data?.id) {
+      trackMutate(hostel.data.id);
+    }
+  }, [user?.role, hostel.data?.id, trackMutate]);
 
   if (hostel.isLoading) return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
   if (hostel.error || !hostel.data) {

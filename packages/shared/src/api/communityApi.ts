@@ -131,3 +131,17 @@ export async function togglePostLike(postId: string, userId: string, liked: bool
     if (error) throw toApiError(error);
   }
 }
+
+/** Admin (or author): delete a community post. RLS enforces who may delete. */
+export async function deletePost(postId: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from('community_posts').delete().eq('id', postId);
+  if (error) throw toApiError(error);
+}
+
+/** Admin (or author): delete a community reply. RLS enforces who may delete. */
+export async function deleteReply(replyId: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from('community_replies').delete().eq('id', replyId);
+  if (error) throw toApiError(error);
+}

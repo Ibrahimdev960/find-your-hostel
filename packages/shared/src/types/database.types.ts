@@ -88,6 +88,9 @@ export type Database = {
           gender: string | null;
           institution: string | null;
           avatar_url: string | null;
+          suspended: boolean;
+          suspended_at: string | null;
+          suspended_reason: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -99,6 +102,9 @@ export type Database = {
           gender?: string | null;
           institution?: string | null;
           avatar_url?: string | null;
+          suspended?: boolean;
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -110,6 +116,9 @@ export type Database = {
           gender?: string | null;
           institution?: string | null;
           avatar_url?: string | null;
+          suspended?: boolean;
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -544,6 +553,7 @@ export type Database = {
           comment: string | null;
           owner_response: string | null;
           owner_responded_at: string | null;
+          is_hidden: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -561,6 +571,7 @@ export type Database = {
           comment?: string | null;
           owner_response?: string | null;
           owner_responded_at?: string | null;
+          is_hidden?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -612,6 +623,17 @@ export type Database = {
         Row: { student_id: string; hostel_id: string; created_at: string };
         Insert: { student_id: string; hostel_id: string; created_at?: string };
         Update: Partial<Database['public']['Tables']['saved_hostels']['Insert']>;
+        Relationships: [];
+      };
+      hostel_views: {
+        Row: { student_id: string; hostel_id: string; viewed_at: string; view_count: number };
+        Insert: {
+          student_id: string;
+          hostel_id: string;
+          viewed_at?: string;
+          view_count?: number;
+        };
+        Update: Partial<Database['public']['Tables']['hostel_views']['Insert']>;
         Relationships: [];
       };
       community_posts: {
@@ -712,6 +734,28 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['promotions']['Insert']>;
         Relationships: [];
       };
+      activity_logs: {
+        Row: {
+          id: string;
+          actor_id: string | null;
+          action: string;
+          target_type: string | null;
+          target_id: string | null;
+          detail: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_id?: string | null;
+          action: string;
+          target_type?: string | null;
+          target_id?: string | null;
+          detail?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['activity_logs']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -791,6 +835,61 @@ export type Database = {
           seat_type_count: number;
           distance_km: number | null;
           is_featured: boolean;
+        }[];
+      };
+      track_hostel_view: {
+        Args: { p_hostel_id: string };
+        Returns: undefined;
+      };
+      get_recommendations: {
+        Args: { p_limit?: number | null };
+        Returns: Database['public']['Functions']['search_hostels']['Returns'];
+      };
+      admin_dashboard_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          owners_pending: number;
+          owners_approved: number;
+          owners_suspended: number;
+          listings_pending: number;
+          listings_published: number;
+          reports_open: number;
+          promotions_pending: number;
+          bookings_active: number;
+          bookings_total: number;
+          users_total: number;
+          new_users_7d: number;
+          new_users_30d: number;
+        }[];
+      };
+      log_activity: {
+        Args: {
+          p_action: string;
+          p_target_type?: string | null;
+          p_target_id?: string | null;
+          p_detail?: Record<string, unknown> | null;
+        };
+        Returns: undefined;
+      };
+      admin_set_user_suspended: {
+        Args: { p_user_id: string; p_suspended: boolean; p_reason?: string | null };
+        Returns: undefined;
+      };
+      admin_list_bookings: {
+        Args: { p_status?: BookingStatus | null; p_limit?: number | null };
+        Returns: {
+          id: string;
+          hostel_id: string;
+          hostel_name: string | null;
+          student_name: string | null;
+          owner_name: string | null;
+          occupancy: SeatTypeKey;
+          status: BookingStatus;
+          payment_method: PaymentMethod;
+          effective_rent: number;
+          advance_amount: number;
+          move_in_date: string;
+          created_at: string;
         }[];
       };
     };

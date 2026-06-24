@@ -4,5 +4,6 @@ export * from './schemas';
 export * from './queries/keys';
 export * from './types';
 export * from './api/searchApi';
+export * from './api/recommendationsApi';
 export * from './api/bookingsApi';
 export * from './api/requestsApi';

@@ -523,7 +523,7 @@ invalidate). **Screens never call the database directly.**
 - [x] Promotions Module **(M11 done)**
 - [ ] Web Admin Panel Module
 - [x] Notifications Module **(M7 done)**
-- [ ] Recommendation Module
+- [x] Recommendation Module **(M12 done)**
 - [ ] Mobile app (Phase 2)
 
 > Update the checkboxes above as modules are implemented.
@@ -546,7 +546,8 @@ invalidate). **Screens never call the database directly.**
 | M9 Reviews & Moderation | ✅ | `0010_reviews` | `api/reviewsApi`/`reportsApi` | web reviews + report; admin `/reports` |
 | M10 Community | ✅ | `0011_community` | `api/communityApi` | web saved hostels + Q&A |
 | M11 Promotions | ✅ | `0012_promotions` | `api/promotionsApi` | owner promote flow + admin approve |
-| M12 Recommendations | ⏳ next | `0013_recommendations` (planned) | `api/recommendationsApi` | "Recommended for you" |
+| M12 Recommendations | ✅ | `0013_recommendations` | `features/student` (recommendations) | home "Recommended for you" + view tracking |
+| M13 Web Admin Panel | 🚧 in progress | `0014_admin`, `0015_admin_users_bookings`, `0016_admin_content` | `api/adminStats`/`adminOwners`/`adminUsers`/`adminBookings` + review/community moderation | dashboard KPIs + owners/users/bookings/content + server guard (messaging next) |
 
 > No git commits are made (see §7.1) — work lands in the working tree only.
 
@@ -838,6 +839,89 @@ invalidate). **Screens never call the database directly.**
   - Featured ranking is computed live inside the `security definer` `search_hostels` RPC (active
     + within window), so expiry needs no cron to affect ranking. `PromotionPlan` stays sourced
     from shared `config` (not re-exported from `types`) to avoid a duplicate root export.
+
+- **M12 — Recommendations ✅**. Delivered:
+  - DB `0013_recommendations.sql`: `hostel_views` table (private per-student view history,
+    pk `student_id+hostel_id`, `viewed_at`/`view_count` refreshed on re-view; RLS = student
+    reads/clears own). `track_hostel_view(hostel_id)` `security definer` RPC upserts the
+    caller's view of a **published** hostel (no direct write policy needed; anon + non-published
+    ignored). **`get_recommendations(p_limit)`** `security definer` RPC returns the **same row
+    shape as `search_hostels`** (reuses `SearchHostelCard`): rule-based score over published
+    listings — institution match (+3), saved/viewed/booked **city** (+2) and **hostel_type**
+    (+2) affinity, **price-band** proximity (±40% of typical rent, +1), rating nudge, and the
+    featured boost (featured-first order). Already-booked hostels excluded; **new users fall
+    back to top-rated** so it never renders empty. Granted to `authenticated` only (personalized,
+    unlike anon-callable search). `database.types.ts` extended (table + 2 RPCs).
+  - Shared (`features/student`): `api/recommendationsApi` (`getRecommendations`/`trackHostelView`),
+    `hooks/useRecommendations` (`useRecommendations(limit, enabled)` + `useTrackHostelView`),
+    `recommendationKeys`.
+  - Web: `RecommendedRow` (reuses `HostelResultCard`) on the **home page** — renders only for
+    signed-in **students** with results; `/hostels/[id]` fires `trackHostelView` on load for
+    students (fire-and-forget) so views feed future recommendations.
+  - **Verified:** `turbo run type-check lint build` clean; web builds (home carries the
+    recommended row).
+  - Recommendations are a **`security definer` rule-based RPC** (no ML) sharing the search card
+    shape, so the existing result card + featured ranking are reused unchanged. View history is
+    strictly student-private (RLS), written only through the tracking RPC.
+
+- **M13 — Web Admin Panel 🚧** (slice 1: Dashboard + Owners). Delivered:
+  - DB `0014_admin.sql`: **`activity_logs`** audit table (actor/action/target/detail jsonb; RLS =
+    admin select only, written solely by security-definer code). `log_activity(...)` reusable
+    insertion point; **`audit_owner_status`** AFTER trigger logs every admin-driven owner status
+    change (complements the M1 `guard_owner_verification` rule trigger, untouched). **`admin_dashboard_stats()`**
+    `security definer` RPC (explicit `is_admin()` guard) → one-row KPI snapshot (owners pending/
+    approved/suspended, listings pending/published, open reports, pending promotions, active/total
+    bookings, total + new-7d/30d users). Owner approve/reject/**suspend**/reactivate already worked
+    via the M1 trigger + admin RLS — this layer adds visibility, not new write paths. `database.types.ts`
+    extended (table + 2 RPCs).
+  - Shared (cross-feature): `api/adminStatsApi` (`getAdminDashboardStats` + `AdminDashboardStats`),
+    `api/adminOwnersApi` (`listOwners` joined to the base profile + `approve/reject/suspend/reactivate`,
+    `AdminOwner` type); `hooks/useAdminStats` (`adminKeys` factory) + `hooks/useAdminOwners`
+    (`useAdminOwners`/`useApproveOwner`/`useRejectOwner`/`useSuspendOwner`/`useReactivateOwner`).
+    New `admin` query root.
+  - Admin app: **Dashboard** rebuilt with live KPI cards (clickable → queues); new **`/owners`**
+    verification queue (status filter, approve/reject/suspend/reactivate, signed-URL CNIC/ownership
+    doc viewing). Nav gains **Owners**.
+  - **Verified:** `turbo run type-check lint build` clean; admin builds incl. `/owners`.
+
+  **Slice 2 — Users + Bookings.** Delivered:
+  - DB `0015_admin_users_bookings.sql`: adds `suspended`/`suspended_at`/`suspended_reason` to
+    `profiles` + a **`guard_profile_admin_fields`** trigger that stops non-admins changing their
+    own `role` or suspension flags (closes a latent self-edit / self-promote hole in the existing
+    profiles update policy). **`admin_set_user_suspended(user, bool, reason)`** RPC (admin-guarded,
+    audited via `log_activity`) suspends/reactivates an account — reversible; hard account deletion
+    is **deferred** (spans `auth.users` + FK cascades against the booking edit-lock triggers).
+    **`admin_list_bookings(status, limit)`** `security definer` RPC (admin-guarded) returns a
+    flattened platform-wide bookings feed (hostel + student/owner names) so the monitor needs no
+    cross-role profile reads. `database.types.ts` extended (profiles cols + 2 RPCs).
+  - Shared (cross-feature): `api/adminUsersApi` (`listUsers({role,search})` + `setUserSuspended`),
+    `api/adminBookingsApi` (`listAdminBookings` + `AdminBooking`); hooks `useAdminUsers`/
+    `useSetUserSuspended` and `useAdminBookings`; `adminKeys` extended (users/bookings).
+  - Admin app: **`/users`** (role filter + search, suspend/reactivate, admins shielded) and
+    **`/bookings`** (read-only monitor, status filter). Nav gains **Users** + **Bookings**.
+  - **Verified:** `turbo run type-check lint build` clean; admin builds incl. `/users` + `/bookings`.
+
+  **Slice 3 — Content moderation + server-side guard.** Delivered:
+  - DB `0016_admin_content.sql`: `reviews.is_hidden` soft-moderation flag + a `reviews_update_admin`
+    RLS policy (admins can toggle it; the M9 policy only covered author/owner). **`recompute_hostel_rating`
+    replaced** to aggregate only non-hidden reviews, so hiding/restoring instantly reflects in
+    `avg_rating`/`review_count`. Community posts/replies already allow **admin delete** via their M10
+    RLS — no schema change needed. `database.types.ts` extended (`reviews.is_hidden`).
+  - Shared (cross-feature): `reviewsApi` — public `listHostelReviews` now filters `is_hidden=false`;
+    added `listAllReviews` (admin, includes hidden) + `setReviewHidden`. `communityApi` — added
+    `deletePost`/`deleteReply` (RLS enforces admin/author). New `hooks/useAdminContent`
+    (`useAdminReviews`/`useSetReviewHidden`/`useAdminPosts`/`useDeletePost`); `adminKeys` extended
+    (reviews/posts).
+  - Admin app: new **`/content`** page (tabs: Reviews → hide/restore; Posts → delete). Nav gains
+    **Content**.
+  - **Server-side admin guard:** the `(dashboard)/layout.tsx` is now an **async server component**
+    that resolves the Supabase session + checks `profiles.role = 'admin'` and `redirect('/login')`
+    otherwise — real server enforcement beyond the client `AdminGuard` (kept for reactivity) and RLS.
+    All dashboard routes are now server-rendered (`ƒ`); `/login` stays static.
+  - **Verified:** `turbo run type-check lint build` clean; admin builds incl. `/content`.
+
+  - **Still open for M13:** account hard-delete, Messaging oversight (privacy decision pending), and
+    surfacing the `activity_logs` audit trail in the UI.
 
 ---
 

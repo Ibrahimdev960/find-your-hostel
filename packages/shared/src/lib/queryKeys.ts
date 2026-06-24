@@ -25,6 +25,7 @@ export const queryRoots = {
   promotions: 'promotions',
   reports: 'reports',
   recommendations: 'recommendations',
+  admin: 'admin',
 } as const;
 
 export type QueryRoot = (typeof queryRoots)[keyof typeof queryRoots];

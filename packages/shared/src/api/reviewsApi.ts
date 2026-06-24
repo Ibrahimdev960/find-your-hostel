@@ -54,7 +54,31 @@ export async function listHostelReviews(hostelId: string): Promise<Review[]> {
     .from('reviews')
     .select('*')
     .eq('hostel_id', hostelId)
+    .eq('is_hidden', false)
     .order('created_at', { ascending: false });
+  return unwrap(result);
+}
+
+/** Admin: most recent reviews across all hostels (includes hidden, for moderation). */
+export async function listAllReviews(limit = 100): Promise<Review[]> {
+  const supabase = getSupabase();
+  const result = await supabase
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return unwrap(result);
+}
+
+/** Admin: soft-hide or restore a review (hiding removes it from the rating aggregate). */
+export async function setReviewHidden(reviewId: string, hidden: boolean): Promise<Review> {
+  const supabase = getSupabase();
+  const result = await supabase
+    .from('reviews')
+    .update({ is_hidden: hidden })
+    .eq('id', reviewId)
+    .select('*')
+    .single();
   return unwrap(result);
 }
 

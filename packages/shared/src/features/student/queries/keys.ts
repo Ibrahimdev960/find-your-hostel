@@ -7,6 +7,11 @@ export const searchKeys = {
   availability: (hostelId: string) => [queryRoots.seatTypes, 'availability', hostelId] as const,
 };
 
+/** Recommendation query keys — personalized "Recommended for you" listings. */
+export const recommendationKeys = {
+  list: (limit: number) => [queryRoots.hostels, 'recommendations', limit] as const,
+};
+
 /** Booking query keys — shared by the student (own bookings) and owner (hostel bookings) views. */
 export const bookingKeys = {
   all: [queryRoots.bookings] as const,
