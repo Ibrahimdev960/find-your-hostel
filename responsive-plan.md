@@ -3,7 +3,7 @@
 > **What this is.** A senior front‑end lead's end‑to‑end plan to make `apps/web` fully
 > responsive across phones, tablets, laptops, and large desktops — building on the design
 > system already shipped in [`designer.md`](./designer.md) / [`designerplan.md`](./designerplan.md).
-> It audits the current state, sets the breakpoint + spacing + touch standards, specifies
+> It audits the current state, sets the breakpoint a+ spacing + touch standards, specifies
 > responsive behavior for every shared primitive and every route, and sequences the work into
 > phases. **No implementation here — this is the plan.**
 >
