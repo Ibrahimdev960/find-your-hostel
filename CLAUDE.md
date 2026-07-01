@@ -923,6 +923,312 @@ invalidate). **Screens never call the database directly.**
   - **Still open for M13:** account hard-delete, Messaging oversight (privacy decision pending), and
     surfacing the `activity_logs` audit trail in the UI.
 
+### 8.2 Design redesign (web) — warm terracotta system
+
+> Presentation-only redesign of `apps/web` onto the **warm cream & terracotta** design system.
+> Authority docs at repo root: `designer.md` (tokens/components), `page-templates.md` (5 page
+> templates), `designerplan.md` (full plan + phased rollout D0→D5). No business logic changes —
+> all data still flows through `@findyourhostel/shared`. Nothing committed (§7.1).
+
+- **D0 — Token foundation ✅.** Rewrote `apps/web/src/app/globals.css` to the semantic token
+  system: light+dark CSS variables on `:root` / `html[data-theme="dark"]` re-exposed via
+  `@theme inline` (`bg-card`, `text-foreground-muted`, `border-border`, `text-primary`, …), the
+  humanist `--font-sans` stack, the `sidebar-tip-in` keyframe, a slim 6px scrollbar, and a
+  `prefers-reduced-motion` reset. Legacy `brand-*` ramp **repointed to terracotta shades** as a
+  transition shim (un-migrated pages render on-brand; delete in D5). Updated
+  `packages/shared/src/theme/colors.ts` to a `{light, dark}` terracotta map (JS authority for
+  mobile). Added `providers/ThemeProvider.tsx` (`useTheme` + `themeNoFlashScript`) wired into
+  `providers/index.tsx`; the no-flash script runs in `layout.tsx <head>` before paint; toasts
+  restyled to tokens. **Verified:** `type-check` + `lint` clean; `build` green with placeholder
+  Supabase env (build prerender needs `NEXT_PUBLIC_SUPABASE_*`).
+
+- **D1 — Component kit ✅.** Token-driven UI kit under `apps/web/src/components/ui` (barrel
+  `ui/index.ts`). Rewrote `Button` (pill `rounded-full`, variants primary/secondary/outline/
+  ghost/link/destructive + de-emphasized `destructiveGhost`), `Input`/`Textarea`/`Select`/`Field`/
+  `Label` (bordered `bg-card`, `focus:ring-4 ring-primary/10`), `Card` (retokened). Added
+  `Panel`+`PanelSection` (24px soft-lift surface), `Badge`+`StatusPill` (tinted, keyed on shared
+  `StatusTone`), `SearchInput` (icon + clear), `Skeleton`/`SkeletonList`, `EmptyState`, `Switch`
+  (flex-track, `role="switch"`), `Dialog`+`ConfirmDialog` (Radix, focus-trapped), `Avatar` (Radix,
+  initials fallback), `Tooltip` (Radix). **Unified the status badges** — `BookingStatusBadge`,
+  `PaymentStatusBadge`, `RequestStatusBadge`/`OfferStatusBadge`, `HostelStatusBadge` now render via
+  `StatusPill`/`Badge` (fixes latent broken `bg-danger`/`bg-neutral-*` colors). Declared the Radix
+  deps (dialog/alert-dialog/avatar/select/separator/tooltip) in `apps/web/package.json` (already
+  hoisted at root). **Verified:** `type-check` + `lint` clean; build green (25/25 pages).
+
+- **D2 — App shell ✅.** Built the global frame under `apps/web/src/components/layout`:
+  **`PageHeader`** (sticky `top-16 z-[25]`, full-bleed, title+subtitle, `children` toolbar,
+  `collapsibleTitle` fold-on-scroll w/ 120/24 hysteresis, action→FAB outside the blur, history-back
+  arrow), **`FilterTabs`** (segmented pill control, raised active segment + count badges),
+  **`Sidebar`** (collapsible `w-[248px]`↔`w-[76px]`, localStorage persist, `aria-current` active,
+  count badges + collapsed dot, theme toggle + sign-out), `Navbar` (sticky, mobile menu +
+  `NotificationBell`), `MobileSidebar` (drawer z-50 + backdrop z-40, scroll-lock), `AppShell`
+  (orchestrates collapse/persist + mobile drawer + notification badge), `StatCard`, and `navConfig`
+  (`studentNav`/`ownerNav`). Added client group layouts `(student)/layout.tsx` + `(owner)/layout.tsx`
+  wrapping their routes in `AppShell`. **Pilot:** rebuilt `/bookings` onto the List template
+  (PageHeader + FilterTabs by status + SkeletonList + EmptyState + token cards) — validates shell +
+  header + tabs together. **Verified:** `type-check` + `lint` clean; build green (25/25).
+  *Note:* other in-group pages still carry their own inline headers (temporary double-nesting)
+  until D3/D4 converts each onto the template; the public `/search` currently renders inside the
+  student shell pending the D3 `(marketing)` split.
+
+- **D3 — Student + public surfaces ✅.**
+  Moved the shared authed surfaces into a new **`(app)`** route group (`community`, `messages`,
+  `notifications`, `profile`) with a **role-aware `(app)/layout.tsx`** that renders `AppShell` with
+  the owner or student nav (route groups don't change URLs — no links broke). Converted onto the
+  templates: **`/`** landing (marketing hero + how-it-works + `RecommendedRow`, dropped `SmokeTest`
+  usage), **`/search`** (List: PageHeader + list/map toggle + Skeleton/EmptyState), **`/bookings`**,
+  **`/requests`**, **`/saved`**, **`/notifications`**, **`/messages`**, **`/community`** (List
+  templates w/ FilterTabs + Skeleton + EmptyState), **`/profile`** (Settings: PanelSections +
+  save/sign-out). Retokened `RecommendedRow`, `HostelResultCard`, `SearchFilters`. **Verified:**
+  `type-check` + `lint` clean; build green (25/25). Detail pages onto the Detail template
+  (`/hostels/[id]` public slim-header page, `/bookings/[id]`, `/requests/[id]`, `/community/[id]`,
+  `/messages/[id]` chat) with `ConfirmDialog` for destructive/irreversible actions (cancel booking,
+  cancel request, accept offer). Wizards `/requests/new` + `/hostels/[id]/book` (standalone
+  checkout w/ token slim-header, `Switch` terms). Retokened the shared children `PaymentForm`,
+  `NotificationBell`, and `review/*` (`Stars`/`ReviewForm`/`ReportButton`/`HostelReviews`).
+  **Verified:** `type-check` + `lint` clean; build green (25/25).
+
+- **D4 — Owner surface + auth ✅.** Converted the owner pages (inside the `(owner)` `AppShell`)
+  onto templates: **`/owner`** Dashboard (KPI `StatCard` band + verification spotlight + hostels
+  list w/ `ConfirmDialog` delete), **`/owner/bookings`** List (FilterTabs by action/active/closed +
+  `OwnerPaymentReview`), **`/owner/requests`** List (approval banner + inline `SubmitOfferForm`),
+  **`/owner/promotions`** List+create (unifies the 6th status badge onto `StatusPill`). Retokened
+  the `(auth)` layout + all auth screens (login/signup/forgot/reset) and the owner child components
+  (`HostelWizard`, `OwnerOnboarding`, `SeatTypeEditor`, `DocumentUpload`, `OwnerPaymentReview`,
+  `SubmitOfferForm`) + the owner `hostels/new`·`[id]/edit`·`onboarding` pages via a token
+  migration. **Verified:** `type-check` + `lint` clean; build green (25/25). *Note:* the owner
+  wizard/onboarding pages are on-brand but keep their own inline headers (not yet the `PageHeader`
+  Wizard template) — a polish item.
+
+- **D5 — Admin alignment + cleanup ✅.** Web cleanup: deleted `SmokeTest`, retokened
+  `search/HostelMap`, and **removed the `brand-*` compat shim** from web `globals.css` (zero
+  legacy `brand-*`/`neutral-*` remain in `apps/web`). Ported the full token system to
+  `apps/admin/src/app/globals.css` (light+dark CSS vars + `@theme inline` + terracotta-repointed
+  `brand-*` shim + `bg-background` body) so admin instantly reads as the same warm system without
+  rewriting each admin page. **Verified:** `turbo run type-check lint` clean across all 6 tasks;
+  both apps build (web 25/25, admin 12/12). *Follow-ups (not blocking):* migrate `apps/admin`
+  components off `brand-*`/`neutral-*` onto the semantic tokens + adopt `PageHeader`/`FilterTabs`/
+  `Panel` there (then drop the admin shim); convert the owner wizard/onboarding pages to the
+  `PageHeader` Wizard template; add a `(marketing)` shell so public `/search` doesn't render the
+  student sidebar.
+
+> **Redesign status:** D0–D5 landed — `apps/web` fully on the warm cream & terracotta design
+> system (tokens, UI kit, app shell, all routes on templates, light/dark), `apps/admin` token-
+> aligned. Everything left in the working tree (no commits, §7.1).
+
+### 8.3 Responsiveness (web) — `responsive-plan.md`
+
+> Making `apps/web` fully responsive across 320px→1440px+. Plan at repo root:
+> `responsive-plan.md` (audit, breakpoint system, per-primitive + per-route specs, phases R0→R6).
+> Mobile-first; `lg` (1024) is the shell hinge; content capped `max-w-[1440px]`.
+
+- **R0 — Foundations ✅.** Added `viewport-fit=cover` (+ theme-color) via a `viewport` export in
+  `layout.tsx` so `env(safe-area-inset-*)` is available. Registered an **`xs` (475px)** breakpoint
+  and a **`coarse` pointer variant** (`@custom-variant coarse (@media (pointer: coarse))`) in
+  `globals.css`. Standardized **touch targets to 44px on touch** via `coarse:` — `Button` `sm`
+  (`coarse:h-11`) + `icon` (`coarse:h-11 coarse:w-11`), and the shell/input raw icon buttons
+  (`Navbar` hamburger, `Sidebar` theme/sign-out, `MobileSidebar` close, `SearchInput` clear,
+  `PageHeader` back). Made the **FAB safe-area aware**
+  (`bottom-[calc(1.5rem+env(safe-area-inset-bottom))]`). **Verified:** `type-check`+`lint` clean;
+  build green (25/25); the `@media (pointer:coarse)`, `475px`, and `safe-area-inset` rules are
+  present in the compiled CSS.
+
+- **R1 — Primitives ✅.** `Dialog`'s `DialogContent` is now **a bottom sheet on mobile** (pinned to
+  bottom, `max-h-[90dvh]`, safe-area padded, top-rounded) and reverts to a **centered dialog at
+  `sm+`** — so every `ConfirmDialog` across the app adapts automatically. Added a reusable
+  **`BottomSheet`** primitive (`ui/bottom-sheet.tsx`, Radix Dialog under the hood: grab handle,
+  scrollable body, optional footer, safe-area padding) for the search filter sheet + mobile menus;
+  exported from the `ui` barrel. **Verified:** `type-check` + `lint` clean.
+
+- **R3 — Public + student pages ✅.** **`/search`**: filters now open in a **`BottomSheet`** below
+  `lg` (a "Filters" button with an active-count badge) while the inline sidebar shows `lg:block`;
+  `SearchFilters` made card-less (the sheet / desktop wrapper provides the surface); map height
+  `h-[60svh] lg:h-[70vh]`. **`/hostels/[id]`**: gallery collapses to a single hero on mobile
+  (`grid-cols-1 sm:grid-cols-3`, thumbs `hidden sm:grid`), map `h-56 sm:h-64`. **`HomeNav`**:
+  secondary links collapse `< md` (bell + Profile always visible) so the landing bar never overflows.
+  **`/notifications`** header buttons `flex-wrap`. Removed an unused import in `Sidebar`. **Verified:**
+  `type-check` + `lint` clean; build green (25/25).
+
+- **R4 — Chat + checkout ✅.** **`/messages/[id]`**: message area switched to `h-[58dvh] sm:h-[60vh]`
+  (dynamic viewport height shrinks with the mobile keyboard), the composer is now a **sticky bottom
+  bar** on mobile (`sticky bottom-0` + backdrop + safe-area pad, reverts to inline `sm+`), and bubbles
+  widen to `max-w-[85%] sm:max-w-[75%]`. **`/hostels/[id]/book`**: price panel is `md:sticky md:top-6`
+  on desktop; on mobile the in-panel Confirm is hidden and a **sticky bottom action bar** (`md:hidden`,
+  safe-area padded) shows the advance total + Confirm so it's always reachable. **Verified:**
+  `type-check` + `lint` clean.
+
+- **R5 — Owner surface ✅.** `/owner` hostel rows now **stack on mobile**
+  (`flex-col gap-3 sm:flex-row sm:justify-between`) with the action cluster wrapping left
+  (`justify-start sm:justify-end`). Collapsed the hard form grids in `SeatTypeEditor`,
+  `SubmitOfferForm`, `HostelWizard`, and `SearchFilters` (`grid-cols-1 xs:grid-cols-2`, wizard
+  facilities `grid-cols-2 sm:grid-cols-3`) so fields aren't squeezed on small phones; the wizard
+  stepper already `flex-wrap`s. **Verified:** `type-check` + `lint` clean; build green (25/25).
+
+- **R2 — Shell & nav ✅.** `AppShell` main column got `min-w-0` (stops wide children forcing
+  horizontal page scroll). `Navbar` workspace label now `hidden xs:block` + `truncate min-w-0` so it
+  never crowds the bell on the smallest phones. `Sidebar` nav is `overscroll-contain` (drawer scroll
+  doesn't chain to the page) and the user block pads `pb-[max(0.75rem,env(safe-area-inset-bottom))]`
+  for the home indicator. **Verified:** `type-check` + `lint` clean.
+
+- **R6 — Admin + polish ✅.** `apps/admin` data tables (`/users`, `/bookings`) now scroll instead of
+  clipping on small screens (`overflow-x-auto` wrapper + `min-w-[640px]`/`[720px]` tables). The admin
+  top nav (8 links) **stacks under the brand and scrolls horizontally** on mobile
+  (`flex-col sm:flex-row` header, `overflow-x-auto whitespace-nowrap` nav, `shrink-0` links); admin
+  content padding `p-4 sm:p-6`. Dashboard KPI grid was already responsive
+  (`sm:grid-cols-2 lg:grid-cols-4`). **Verified:** `turbo run type-check lint` clean across all 6
+  tasks; both apps build (web 25/25, admin 12/12).
+
+> **Responsiveness status:** R0–R6 landed — `apps/web` is mobile-first across 320px→1440px+ (safe
+> areas, 44px touch targets, bottom-sheet dialogs + filter sheet, dvh chat, sticky mobile checkout,
+> collapsing grids, drawer nav), `apps/admin` tables + nav are responsive. Left in the working tree
+> (no commits, §7.1). *Remaining polish (non-blocking):* real-device landscape pass + Lighthouse
+> mobile audit; migrate admin components fully onto semantic tokens.
+
+### 8.4 UX flow implementation (web) — `flow-audit.md`
+
+> Implementing the UX/flow/wording audit at repo root: `flow-audit.md` (plain-language for
+> non-technical, low-literacy, low-English users). **Copy/flow only — no visual, colour, or
+> responsive changes.** Phases F1→F7 in the audit's §12 priority order. Nothing committed (§7.1).
+
+- **F1 — Plain-language status + money map ✅.** New shared word list
+  `packages/shared/src/utils/plainLabels.ts` (exported via the `utils` barrel → root
+  `@findyourhostel/shared`): action-first, **viewer-aware** status text so student and owner each
+  read *their* next step. `bookingStatusPlain(status, viewer)` (e.g. `awaiting_advance` →
+  "Pay deposit to reserve" for students / "Waiting for deposit" for owners), `paymentStatusPlain`,
+  `offerStatusPlain`, plus static maps `REQUEST_STATUS_PLAIN`, `HOSTEL_STATUS_PLAIN`
+  (Verified → "Approved — ready to publish"), `PAYMENT_STAGE_PLAIN`/`PAYMENT_STAGE_HINT`,
+  `MONEY_LABEL` (Advance → "Booking deposit (20% now to hold your seat)", Security deposit →
+  "Refundable deposit (returned when you leave)"), and `HOSTEL_TYPE_PLAIN` (co_living →
+  "Mixed / Family"). Wired every badge (`BookingStatusBadge`/`PaymentStatusBadge`/`OfferStatusBadge`
+  gained an optional `viewer` prop, defaulting to student; owner pages pass `viewer="owner"`;
+  `RequestStatusBadge`/`HostelStatusBadge` use the plain maps) and the money/vocabulary strings on
+  the student booking detail, booking-confirm (`/hostels/[id]/book`), hostel detail
+  (`/hostels/[id]` — "Room types", "What's included"), and search filters. The technical
+  `*_STATUS_LABEL` maps in `utils/bookings.ts` are kept for internal use. **Verified:**
+  `turbo run type-check lint` clean (6/6).
+
+- **F2 — Name & cross-link the two booking paths ✅.** Named the paths and cross-linked them so
+  students understand the choice. `/requests/new` retitled **"Ask hostels for offers"** with a
+  "what happens after you post" explainer + privacy line ("Owners can't see your name or phone
+  until you accept"); request detail heading → **"Offers you received"**. The `/search` empty
+  state now offers a second path ("Ask hostels for offers" → `/requests/new`); the `/requests`
+  empty state cross-links back to browse listings. Entry CTAs unified to **"Ask hostels"**.
+
+- **F3 — Payment screen as 3 numbered steps ✅.** Rewrote `PaymentForm` as plain numbered steps
+  (1 send the money → 2 screenshot → 3 upload; cash skips the screenshot), each with a step
+  circle + one-line instruction, a **trust line** ("Your money goes straight to the owner — Find
+  Your Hostel never holds it"), and an honest "use the details the owner shared / message them"
+  note. Submit reads **"I've paid — send proof"** and is disabled until a screenshot is attached
+  (non-cash). *Follow-up:* the schema has **no owner payout-account field** — adding one (owner
+  profile + migration) would let us show real bank/JazzCash details on this screen.
+
+- **F4 — Reject dialog + owner verb relabel ✅.** New reusable **`ReasonDialog`**
+  (`ui/reason-dialog.tsx`, Radix, focus-trapped, bottom-sheet on mobile) replaces both
+  `window.prompt()` reject calls (owner bookings + `OwnerPaymentReview`) with a styled reason
+  capture. Owner lifecycle verbs relabelled to outcomes: Confirm→**Accept booking**,
+  Reject→**Decline**, Mark moved-in→**Mark as moved in**, Activate→**Start stay**,
+  Mark completed→**Mark stay finished**.
+
+- **F5 — "What happens next" success/error copy ✅.** Rewrote the shared mutation toasts (in
+  `packages/shared` hooks, so web + future mobile share them) to say what happens next: payment
+  submit → "Payment sent! The owner will confirm it soon — we'll notify you.", request post →
+  "Your request is live. Owners can now send you offers…", offer accept → "…other offers were
+  declined.", owner confirm/move-in/activate/reject and hostel submit/publish/unpublish similarly
+  humanised. Owner dashboard verification banner → "You're almost there… Finish verification".
+
+- **F6 — Stage the request form ✅.** `/requests/new` now foregrounds the **essentials** (city,
+  college/university, budget, room type) and hides Category / lowest-budget / move-in / duration /
+  notes behind a **"More options (optional)"** toggle — shorter, less intimidating form.
+
+- **F7 — Label consistency, Block confirm, Boost, quiet alerts ✅.** Standardised CTAs: owner
+  hostel verb → **"List your hostel"** everywhere, student → **"Search hostels"**; "Send…" verbs
+  (**Send request** / **Send for approval** / **Send report**). Renamed the whole promotions
+  concept to **"Boost"** (nav, page, CTAs, "Boosted" search badge). Message **Block** now goes
+  through a `ConfirmDialog` (unblock stays instant). "Enable push" softened to a quiet ghost
+  **"Turn on alerts"** with friendly copy. **Verified:** `turbo run type-check lint` clean (6/6);
+  web builds 25/25, admin 12/12.
+
+> **Flow-audit status:** F1–F7 landed — `apps/web` now speaks plain, action-first language for
+> non-technical users (shared plain-language status/money map, named booking paths, 3-step
+> payment, reason dialogs, human toasts, staged request form, consistent labels). Copy/flow only,
+> no visual/responsive changes. Left in the working tree (no commits, §7.1). *Follow-ups
+> (non-blocking):* add an owner payout-account field so the payment screen can show real account
+> details; apply the same plain-language map inside `apps/admin`.
+
+### 8.5 Landing page (web) — `landing-plan.md`
+
+> Rebuilt `/` as a best-practice marketing landing page (the product's front door) that doubles as
+> the main page — signed-out visitors get the full funnel, signed-in users a compact variant. Plan
+> at repo root: `landing-plan.md` (audience split, section anatomy, phases L0→L5). Reuses the
+> Wonderlist design system + shared data layer — **no new business logic, no schema changes.**
+> Nothing committed (§7.1).
+
+- **L0 — Marketing shell ✅.** New **`(marketing)` route group** (`app/(marketing)/layout.tsx`) —
+  its own frame (slim sticky bar + footer, **no app sidebar**), resolving the redesign follow-up
+  where public pages borrowed the student shell. `MarketingNav` (client: brand + theme toggle +
+  auth-aware `HomeNav`) and `MarketingFooter` (grouped links). `/` moved in (old root `page.tsx`
+  deleted) with SEO `metadata` (title/description/canonical/OG/Twitter) + WebSite JSON-LD; stays a
+  **Server Component**.
+- **L1 — Hero ✅.** `marketing/Hero.tsx` (client, auth-aware): signed-out = eyebrow + `text-5xl`
+  H1 + subhead + **one solid primary CTA (Get started)** + low-commitment **Search hostels** +
+  trust strip, beside a token-only **product mock** (faux search list + map pins + Boosted badge).
+  Signed-in = compact "welcome back" routed by role.
+- **L2 — Audience split + How it works ✅.** `AudienceSplit` (student/owner `Panel` cards, each one
+  CTA) + `HowItWorks` (numbered Step 1·2·3). Signup now honours **`?role=owner`** deep links
+  (wrapped in `Suspense` for `useSearchParams` prerender).
+- **L3 — Trust + Two ways to book ✅.** `TrustGrid` (4 safety tiles — verified, refundable deposit,
+  pay owner directly, report/block) + `TwoWaysToBook` (names + cross-links the two booking paths on
+  the marketing surface too).
+- **L4 — Owner band + FAQ + Closing + Footer ✅.** `OwnerBand` (benefit band + owner CTA), `Faq`
+  (native `<details>` accordion — accessible, zero JS, chevron rotates on `group-open`), `ClosingCta`
+  (tinted band repeating **Get started**). Footer shipped in L0.
+- **L5 — Polish ✅.** `Reveal` client wrapper (IntersectionObserver fade+rise per section) + a
+  `reveal-rise` keyframe; **reduced-motion safe** (CSS shows content instantly) and falls back to
+  visible without IO so content is never trapped hidden. **Verified in-browser** (light + dark, FAQ
+  toggles, reveals fire) and `turbo run type-check lint build` clean — web 25/25, admin 12/12.
+
+> **Landing status:** L0–L5 landed — `/` is a full best-practice landing page (marketing shell,
+> hero + product mock, audience split, how-it-works, trust, two-paths, owner band, FAQ, closing CTA,
+> footer) with one dominant **Get started** action, light/dark, reveal motion, and SEO metadata.
+> Signed-in users get a compact variant. New components under `apps/web/src/components/marketing/`.
+> Left in the working tree (no commits, §7.1). *Follow-up (non-blocking):* let public `/search` +
+> `/hostels/[id]` adopt the `(marketing)` shell; swap the hero mock for a real screenshot; add
+> honest live stats when available.
+
+### 8.6 Recolor (web + admin) — `recolor-plan.md`
+
+> Replaced the **warm cream & terracotta** palette with a modern **indigo on cool white** system
+> (indigo-600 accent, cool slate neutrals, pure-white cards; matching dark mode). Plan at repo root:
+> `recolor-plan.md` (full token tables + phases C0→C5). **Color only — no layout/copy/structure
+> changes.** Because D0–D5 put everything on semantic tokens, this was a token-value swap plus a few
+> bypass fixes. Nothing committed (§7.1).
+
+- **C0 — Web tokens ✅.** Swapped `apps/web/src/app/globals.css` `:root` + dark blocks to the new
+  values (bg `#F8FAFC`, card `#FFFFFF`, text slate `#0F172A/#334155/#64748B`, primary indigo
+  `#4F46E5`→hover `#4338CA`, success/warning/error → `#16A34A/#D97706/#DC2626`; dark = slate-900
+  surfaces + indigo-400 accent with dark text). Updated `layout.tsx` `themeColor` (`#F8FAFC`/`#0F172A`).
+- **C1 — Shared JS authority ✅.** Mirrored the new light+dark maps + functional aliases in
+  `packages/shared/src/theme/colors.ts` (mobile/NativeWind parity).
+- **C2 — Token-bypass fixes ✅.** Warm shadows `rgba(31,26,23,…)`/`rgba(28,28,28,…)` → cool
+  `rgba(15,23,42,…)` (slate-900) in `panel`, `FilterTabs`, `search`, `Hero`; Leaflet map markers →
+  indigo (`#4F46E5`/`#6366F1`); audited `bg-black`/`text-white` — all legit (error buttons + image
+  scrims).
+- **C3 — Admin tokens + brand ramp ✅.** Swapped `apps/admin/src/app/globals.css` `:root`/dark to
+  the same palette + repointed the legacy `brand-*` ramp from terracotta to an **indigo ramp**.
+- **C4 — Admin neutral shim ✅.** Repointed the default `neutral-*` ramp to **cool slate** in the
+  admin `@theme` — so all existing admin pages read cool with **zero per-file edits** (safer than
+  hand-migrating 13 files). *Follow-up:* migrate admin components onto semantic tokens and drop both
+  shims for the fully-tokenized end state.
+- **C5 — Verify ✅.** In-browser light **and** dark verified: landing `/`, app-shell `/search`
+  (sidebar/nav/toggles/forms), and admin `/login` — all cohesive indigo-on-cool-white.
+  `grep` finds no warm residue in web. `turbo run type-check lint build` clean (web 25/25, admin 12/12).
+
+> **Recolor status:** C0–C5 landed — the whole product (web + admin, light + dark, mobile token
+> authority) now reads as **indigo on cool white**: indigo accent/CTAs/nav/links/rings/map markers,
+> slate neutrals, white cards, cool shadows; success/warning/error stay functional. Left in the
+> working tree (no commits, §7.1). *Follow-up (non-blocking):* tokenize admin components + drop the
+> admin `brand-*`/`neutral-*` shims.
+
 ---
 
 ## 9. Project roadmap (implementation plan)

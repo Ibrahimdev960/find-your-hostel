@@ -1,7 +1,7 @@
 'use client';
 
-import { use } from 'react';
-import Link from 'next/link';
+import { use, useState } from 'react';
+import { CalendarCheck } from 'lucide-react';
 import { useBooking, useCancelBooking } from '@findyourhostel/shared/features/student';
 import { useBookingPayments, useReviewForBooking } from '@findyourhostel/shared/hooks';
 import {
@@ -12,11 +12,16 @@ import {
   formatDate,
   SEAT_TYPE_LABEL,
   PAYMENT_METHOD_LABEL,
-  PAYMENT_STAGE_LABEL,
+  PAYMENT_STAGE_PLAIN,
+  MONEY_LABEL,
 } from '@findyourhostel/shared';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel, PanelSection } from '@/components/ui/panel';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ConfirmDialog } from '@/components/ui/dialog';
 import { BookingStatusBadge } from '@/components/booking/BookingStatusBadge';
 import { PaymentStatusBadge } from '@/components/booking/PaymentStatusBadge';
 import { PaymentForm } from '@/components/booking/PaymentForm';
@@ -30,16 +35,22 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const payments = useBookingPayments(id);
   const review = useReviewForBooking(id);
   const cancel = useCancelBooking(user?.id ?? '');
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
-  if (isLoading || !user) return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
-  if (booking.isLoading) return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
+  if (isLoading || !user || booking.isLoading) {
+    return (
+      <div className="space-y-4 pb-8">
+        <PageHeader title="Booking" useBackNavigation backFallbackHref="/bookings" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
   if (!booking.data) {
     return (
-      <div className="p-10 text-center text-sm text-neutral-500">
-        Booking not found.{' '}
-        <Link href="/bookings" className="text-brand-600 hover:underline">
-          My bookings
-        </Link>
+      <div className="space-y-4 pb-8">
+        <PageHeader title="Booking not found" useBackNavigation backFallbackHref="/bookings" />
+        <EmptyState icon={CalendarCheck} title="Booking not found" description="It may have been removed." />
       </div>
     );
   }
@@ -47,52 +58,40 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const b = booking.data;
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-8 space-y-6">
-      <Link href="/bookings" className="text-sm text-brand-600 hover:underline">
-        ← My bookings
-      </Link>
+    <div className="mx-auto max-w-2xl space-y-6 pb-8">
+      <PageHeader
+        title={b.hostel?.name ?? 'Hostel'}
+        subtitle={
+          [b.hostel?.city, b.hostel?.nearest_institution].filter(Boolean).join(' · ') ||
+          'Location n/a'
+        }
+        useBackNavigation
+        backFallbackHref="/bookings"
+      />
 
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900">{b.hostel?.name ?? 'Hostel'}</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            {[b.hostel?.city, b.hostel?.nearest_institution].filter(Boolean).join(' · ') ||
-              'Location n/a'}
-          </p>
-        </div>
-        <BookingStatusBadge status={b.status} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Booking details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <Row label="Seat type" value={`${SEAT_TYPE_LABEL[b.occupancy]} · ${formatRent(b.effective_rent)}`} />
+      <PanelSection title="Booking details" action={<BookingStatusBadge status={b.status} />}>
+        <div className="space-y-2 text-sm">
+          <Row label="Room type" value={`${SEAT_TYPE_LABEL[b.occupancy]} · ${formatRent(b.effective_rent)}`} />
           <Row label="Move-in date" value={formatDate(b.move_in_date)} />
           <Row label="Duration" value={`${b.duration_months} month(s)`} />
           <Row label="Payment method" value={PAYMENT_METHOD_LABEL[b.payment_method]} />
           {b.special_requests && <Row label="Special requests" value={b.special_requests} />}
           {b.cancel_reason && <Row label="Reason" value={b.cancel_reason} />}
-        </CardContent>
-      </Card>
+        </div>
+      </PanelSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Payment</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <Row label="Advance (20%)" value={formatCurrency(b.advance_amount)} strong />
-          <Row label="Balance (80%)" value={formatCurrency(b.balance_amount)} />
-          <Row label="Security deposit" value={formatCurrency(b.security_deposit)} />
+      <PanelSection title="Payment">
+        <div className="space-y-2 text-sm">
+          <Row label={MONEY_LABEL.advance} value={formatCurrency(b.advance_amount)} strong />
+          <Row label={MONEY_LABEL.balance} value={formatCurrency(b.balance_amount)} />
+          <Row label={MONEY_LABEL.securityDeposit} value={formatCurrency(b.security_deposit)} />
 
-          {/* Payment timeline */}
           {(payments.data?.length ?? 0) > 0 && (
-            <div className="space-y-2 border-t border-neutral-200 pt-3">
+            <div className="space-y-2 border-t border-border pt-3">
               {payments.data?.map((p) => (
                 <div key={p.id} className="flex items-center justify-between gap-2">
-                  <span className="text-neutral-600">
-                    {PAYMENT_STAGE_LABEL[p.stage]} · {formatCurrency(p.amount)}
+                  <span className="text-foreground-secondary">
+                    {PAYMENT_STAGE_PLAIN[p.stage]} · {formatCurrency(p.amount)}
                     {p.rejection_reason ? ` — ${p.rejection_reason}` : ''}
                   </span>
                   <PaymentStatusBadge status={p.status} />
@@ -101,62 +100,74 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
             </div>
           )}
 
-          {/* Submit form for the stage that's currently due (no live payment yet) */}
           {(() => {
             const due = duePaymentStage(b.status);
             if (!due) return null;
             const live = payments.data?.find((p) => p.stage === due && p.status !== 'rejected');
             if (live) return null;
             const amount = due === 'advance' ? b.advance_amount : b.balance_amount + b.security_deposit;
-            return <PaymentForm bookingId={b.id} stage={due} amount={amount} />;
+            return (
+              <div className="pt-2">
+                <PaymentForm bookingId={b.id} stage={due} amount={amount} />
+              </div>
+            );
           })()}
-        </CardContent>
-      </Card>
+        </div>
+      </PanelSection>
 
       {(b.status === 'active' || b.status === 'completed') && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Your review</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {review.isLoading ? (
-              <p className="text-sm text-neutral-500">Loading…</p>
-            ) : review.data ? (
-              <div className="space-y-1">
-                <Stars value={review.data.rating_overall} />
-                {review.data.comment && (
-                  <p className="text-sm text-neutral-700">{review.data.comment}</p>
-                )}
-                <p className="text-xs text-neutral-400">Thanks for reviewing your stay.</p>
-              </div>
-            ) : (
-              <ReviewForm bookingId={b.id} />
-            )}
-          </CardContent>
-        </Card>
+        <PanelSection title="Your review">
+          {review.isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : review.data ? (
+            <div className="space-y-1">
+              <Stars value={review.data.rating_overall} />
+              {review.data.comment && (
+                <p className="text-sm text-foreground-secondary">{review.data.comment}</p>
+              )}
+              <p className="text-xs text-foreground-muted">Thanks for reviewing your stay.</p>
+            </div>
+          ) : (
+            <ReviewForm bookingId={b.id} />
+          )}
+        </PanelSection>
       )}
 
       {isCancellable(b.status) && (
-        <Button
-          variant="destructive"
-          onClick={() => {
-            if (confirm('Cancel this booking? This cannot be undone.'))
-              cancel.mutate({ id: b.id });
-          }}
-          disabled={cancel.isPending}
-        >
-          {cancel.isPending ? 'Cancelling…' : 'Cancel booking'}
-        </Button>
+        <Panel className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Cancel this booking</p>
+              <p className="text-xs text-foreground-muted">This can&apos;t be undone.</p>
+            </div>
+            <Button variant="destructiveGhost" onClick={() => setConfirmCancel(true)} disabled={cancel.isPending}>
+              Cancel booking
+            </Button>
+          </div>
+        </Panel>
       )}
-    </main>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        onOpenChange={setConfirmCancel}
+        title="Cancel this booking?"
+        description="This releases your seat and cannot be undone."
+        confirmLabel="Cancel booking"
+        cancelLabel="Keep booking"
+        loading={cancel.isPending}
+        onConfirm={() => cancel.mutate({ id: b.id }, { onSuccess: () => setConfirmCancel(false) })}
+      />
+    </div>
   );
 }
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-neutral-500">{label}</span>
-      <span className={strong ? 'font-semibold text-neutral-900' : 'text-neutral-700'}>{value}</span>
+      <span className="text-foreground-muted">{label}</span>
+      <span className={strong ? 'font-semibold text-foreground' : 'text-foreground-secondary'}>
+        {value}
+      </span>
     </div>
   );
 }

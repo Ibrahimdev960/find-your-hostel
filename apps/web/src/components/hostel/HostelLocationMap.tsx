@@ -22,7 +22,7 @@ export default function HostelLocationMap({
       <CircleMarker
         center={[lat, lng]}
         radius={10}
-        pathOptions={{ color: '#1d5cf5', fillColor: '#337bff', fillOpacity: 0.9 }}
+        pathOptions={{ color: '#4f46e5', fillColor: '#6366f1', fillOpacity: 0.9 }}
       >
         <Popup>{label}</Popup>
       </CircleMarker>

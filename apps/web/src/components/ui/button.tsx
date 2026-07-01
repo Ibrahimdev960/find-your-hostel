@@ -3,22 +3,35 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/cn';
 
+/**
+ * Pill buttons (designer.md §9). One accent (primary=terracotta). Destructive is
+ * de-emphasized by default — it only reddens on hover, so "Delete/Cancel" never
+ * carries the loudest styling.
+ */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-60',
   {
     variants: {
       variant: {
-        default: 'bg-brand-600 text-white hover:bg-brand-700',
-        outline: 'border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50',
-        ghost: 'text-neutral-700 hover:bg-neutral-100',
-        link: 'text-brand-600 underline-offset-4 hover:underline',
-        destructive: 'bg-danger text-white hover:opacity-90',
+        default: 'bg-primary text-primary-foreground hover:bg-primary-hover',
+        secondary:
+          'border border-border bg-card text-foreground-secondary hover:bg-background-secondary',
+        outline:
+          'border border-border bg-card text-foreground-secondary hover:bg-background-secondary',
+        ghost: 'text-foreground-muted hover:bg-card hover:text-foreground',
+        link: 'rounded-none text-primary underline-offset-4 hover:underline',
+        destructive: 'bg-error text-white hover:opacity-90',
+        // Neutral until hover, then reddens — the preferred "delete" treatment.
+        destructiveGhost:
+          'border border-border bg-card text-foreground-secondary hover:border-error/40 hover:bg-error/10 hover:text-error',
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-8 px-3 text-xs',
-        lg: 'h-11 px-6',
-        icon: 'h-10 w-10',
+        // Touch devices get a 44px floor via the `coarse:` variant without
+        // inflating the compact desktop sizing (responsive-plan.md §2).
+        default: 'h-11 px-4 py-2.5',
+        sm: 'h-9 px-3.5 text-xs coarse:h-11',
+        lg: 'h-12 px-6',
+        icon: 'h-9 w-9 coarse:h-11 coarse:w-11',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },

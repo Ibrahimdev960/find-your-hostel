@@ -42,13 +42,13 @@ export default function HostelMap({
           key={h.id}
           center={[h.latitude as number, h.longitude as number]}
           radius={9}
-          pathOptions={{ color: '#1d5cf5', fillColor: '#337bff', fillOpacity: 0.9 }}
+          pathOptions={{ color: '#4f46e5', fillColor: '#6366f1', fillOpacity: 0.9 }}
         >
           <Popup>
-            <Link href={`/hostels/${h.id}`} className="font-medium text-brand-700">
+            <Link href={`/hostels/${h.id}`} className="font-medium text-primary">
               {h.name}
             </Link>
-            <div className="text-xs text-neutral-600">
+            <div className="text-xs text-foreground-secondary">
               {h.cheapest_rent != null ? formatRent(h.cheapest_rent) : 'Price on request'}
             </div>
           </Popup>

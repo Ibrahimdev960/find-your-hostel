@@ -15,30 +15,33 @@ export function HomeNav() {
     <div className="flex items-center gap-2">
       {user ? (
         <>
-          {user.role === 'owner' && (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/owner">Owner dashboard</Link>
-            </Button>
-          )}
-          {user.role === 'student' && (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/requests">Requests</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/saved">Saved</Link>
-              </Button>
+          {/* Secondary links collapse below md so the bar never overflows on mobile. */}
+          <div className="hidden items-center gap-2 md:flex">
+            {user.role === 'owner' && (
               <Button asChild variant="outline" size="sm">
-                <Link href="/bookings">My bookings</Link>
+                <Link href="/owner">Owner dashboard</Link>
               </Button>
-            </>
-          )}
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/community">Community</Link>
-          </Button>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/messages">Messages</Link>
-          </Button>
+            )}
+            {user.role === 'student' && (
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/requests">Requests</Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/saved">Saved</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/bookings">My bookings</Link>
+                </Button>
+              </>
+            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/community">Community</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/messages">Messages</Link>
+            </Button>
+          </div>
           <NotificationBell />
           <Button asChild size="sm">
             <Link href="/profile">Profile</Link>

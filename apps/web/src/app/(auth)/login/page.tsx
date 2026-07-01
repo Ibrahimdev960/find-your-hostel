@@ -47,7 +47,7 @@ export default function LoginPage() {
             <Input id="password" name="password" type="password" autoComplete="current-password" />
           </Field>
           <div className="text-right">
-            <Link href="/forgot-password" className="text-sm text-brand-600 hover:underline">
+            <Link href="/forgot-password" className="text-sm text-primary hover:underline">
               Forgot password?
             </Link>
           </div>
@@ -55,9 +55,9 @@ export default function LoginPage() {
             {login.isPending ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-neutral-600">
+        <p className="mt-4 text-center text-sm text-foreground-muted">
           New here?{' '}
-          <Link href="/signup" className="font-medium text-brand-600 hover:underline">
+          <Link href="/signup" className="font-medium text-primary hover:underline">
             Create an account
           </Link>
         </p>

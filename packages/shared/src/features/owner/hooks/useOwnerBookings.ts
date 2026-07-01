@@ -39,20 +39,20 @@ function useBookingAction(
 }
 
 export const useConfirmBooking = (ownerId: string) =>
-  useBookingAction(confirmBooking, 'Booking confirmed', ownerId);
+  useBookingAction(confirmBooking, 'Booking accepted. The student has been notified.', ownerId);
 export const useMarkMovedIn = (ownerId: string) =>
-  useBookingAction(markMovedIn, 'Marked as moved in', ownerId);
+  useBookingAction(markMovedIn, 'Marked as moved in. The balance is now due.', ownerId);
 export const useActivateBooking = (ownerId: string) =>
-  useBookingAction(activateBooking, 'Booking activated', ownerId);
+  useBookingAction(activateBooking, 'Stay started. The student can now review it.', ownerId);
 export const useCompleteBooking = (ownerId: string) =>
-  useBookingAction(completeBooking, 'Booking completed', ownerId);
+  useBookingAction(completeBooking, 'Stay marked finished.', ownerId);
 
 export function useRejectBooking(ownerId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason?: string }) => rejectBooking(id, reason),
     onSuccess: (b) => {
-      toast.success('Booking rejected');
+      toast.success('Booking declined. The student has been notified.');
       void qc.invalidateQueries({ queryKey: bookingKeys.owner(ownerId) });
       void qc.invalidateQueries({ queryKey: bookingKeys.detail(b.id) });
     },

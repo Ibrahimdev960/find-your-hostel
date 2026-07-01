@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRegister, registerSchema } from '@findyourhostel/shared/features/auth';
 import { parseZodErrors } from '@findyourhostel/shared';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,22 @@ import { Field, Select } from '@/components/ui/field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function SignupPage() {
+  // useSearchParams (in SignupForm) needs a Suspense boundary for prerender.
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const router = useRouter();
   const register = useRegister();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  // Pre-select the role from a deep link (e.g. "List your hostel" → ?role=owner).
+  const roleParam = useSearchParams().get('role');
+  const defaultRole = roleParam === 'owner' ? 'owner' : 'student';
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -69,7 +81,7 @@ export default function SignupPage() {
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <Field label="I am a" htmlFor="role" error={errors.role}>
-            <Select id="role" name="role" defaultValue="student">
+            <Select id="role" name="role" defaultValue={defaultRole}>
               <option value="student">Student looking for a hostel</option>
               <option value="owner">Hostel owner</option>
             </Select>
@@ -95,9 +107,9 @@ export default function SignupPage() {
             {register.isPending ? 'Creating account…' : 'Create account'}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-neutral-600">
+        <p className="mt-4 text-center text-sm text-foreground-muted">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-brand-600 hover:underline">
+          <Link href="/login" className="font-medium text-primary hover:underline">
             Sign in
           </Link>
         </p>

@@ -85,6 +85,8 @@ function useStatusMutation(
 }
 
 export const useSubmitHostel = () =>
-  useStatusMutation(submitHostelForReview, 'Submitted for verification');
-export const usePublishHostel = () => useStatusMutation(publishHostel, 'Hostel published');
-export const useUnpublishHostel = () => useStatusMutation(unpublishHostel, 'Hostel unpublished');
+  useStatusMutation(submitHostelForReview, 'Sent for approval. We’ll review it and let you know.');
+export const usePublishHostel = () =>
+  useStatusMutation(publishHostel, 'Your hostel is now live — students can see it.');
+export const useUnpublishHostel = () =>
+  useStatusMutation(unpublishHostel, 'Hostel hidden. Students can no longer see it.');

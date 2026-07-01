@@ -40,7 +40,7 @@ export function useSubmitPayment() {
   return useMutation({
     mutationFn: (input: SubmitPaymentInput) => submitPayment(input),
     onSuccess: (p) => {
-      toast.success('Payment submitted');
+      toast.success('Payment sent! The owner will confirm it soon — we’ll notify you.');
       invalidate(p.booking_id);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -52,7 +52,7 @@ export function useConfirmPayment() {
   return useMutation({
     mutationFn: (id: string) => confirmPayment(id),
     onSuccess: (p) => {
-      toast.success('Payment confirmed');
+      toast.success('Payment confirmed. The student has been notified.');
       invalidate(p.booking_id);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -64,7 +64,7 @@ export function useRejectPayment() {
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason?: string }) => rejectPayment(id, reason),
     onSuccess: (p) => {
-      toast.success('Payment rejected');
+      toast.success('Payment rejected. The student can send it again.');
       invalidate(p.booking_id);
     },
     onError: (e: Error) => toast.error(e.message),

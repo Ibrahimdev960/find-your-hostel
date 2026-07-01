@@ -11,10 +11,10 @@ export default function EditHostelPage({ params }: { params: Promise<{ id: strin
   const hostel = useHostel(id);
 
   if (isLoading || !user || hostel.isLoading) {
-    return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
+    return <div className="p-10 text-sm text-foreground-muted">Loading…</div>;
   }
   if (hostel.error || !hostel.data) {
-    return <div className="p-10 text-sm text-danger">Hostel not found.</div>;
+    return <div className="p-10 text-sm text-error">Hostel not found.</div>;
   }
 
   return (

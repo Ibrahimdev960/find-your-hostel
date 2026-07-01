@@ -27,7 +27,7 @@ export function SubmitOfferForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   if (hostels.length === 0) {
-    return <p className="text-sm text-neutral-500">List a hostel first to send offers.</p>;
+    return <p className="text-sm text-foreground-muted">List a hostel first to send offers.</p>;
   }
 
   const onSubmit = (e: React.FormEvent) => {
@@ -53,8 +53,8 @@ export function SubmitOfferForm({
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 border-t border-neutral-200 pt-3">
-      <div className="grid grid-cols-2 gap-3">
+    <form onSubmit={onSubmit} className="space-y-3 border-t border-border pt-3">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
         <Field label="Hostel" htmlFor={`hostel-${requestId}`} error={errors.hostel_id}>
           <Select
             id={`hostel-${requestId}`}

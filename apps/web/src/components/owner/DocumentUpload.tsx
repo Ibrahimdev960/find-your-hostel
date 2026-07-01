@@ -44,11 +44,11 @@ export function DocumentUpload({
 
   return (
     <div className="space-y-1.5">
-      <span className="text-sm font-medium text-neutral-700">{label}</span>
+      <span className="text-sm font-medium text-foreground-secondary">{label}</span>
       <label
         className={cn(
           'flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm',
-          value ? 'border-success/50 bg-success/5 text-neutral-700' : 'border-neutral-300 text-neutral-500',
+          value ? 'border-success/50 bg-success/5 text-foreground-secondary' : 'border-border text-foreground-muted',
           busy && 'opacity-60'
         )}
       >
@@ -68,7 +68,7 @@ export function DocumentUpload({
           disabled={busy}
         />
       </label>
-      {(failed || error) && <p className="text-xs text-danger">{failed ?? error}</p>}
+      {(failed || error) && <p className="text-xs text-error">{failed ?? error}</p>}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { Megaphone } from 'lucide-react';
 import { useOwnerHostels } from '@findyourhostel/shared/features/owner';
 import { useOwnerPromotions, useCreatePromotion } from '@findyourhostel/shared/hooks';
 import { createPromotionSchema } from '@findyourhostel/shared/api';
@@ -16,20 +16,16 @@ import {
 import type { PromotionPlan, PaymentMethod } from '@findyourhostel/shared';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { uploadFile } from '@/lib/upload';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatusPill } from '@/components/ui/badge';
+import { Panel, PanelSection } from '@/components/ui/panel';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Select } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/cn';
 
 const PLANS: PromotionPlan[] = ['featured_1d', 'featured_3d', 'featured_7d', 'featured_30d'];
 const METHODS: PaymentMethod[] = ['bank_transfer', 'jazzcash', 'easypaisa', 'cash'];
-const TONE: Record<'success' | 'warning' | 'danger' | 'neutral', string> = {
-  success: 'bg-success/10 text-success',
-  warning: 'bg-warning/10 text-warning',
-  danger: 'bg-danger/10 text-danger',
-  neutral: 'bg-neutral-100 text-neutral-600',
-};
 
 export default function OwnerPromotionsPage() {
   const { user, isLoading } = useRequireAuth('owner');
@@ -44,8 +40,6 @@ export default function OwnerPromotionsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  if (isLoading || !user) return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,78 +71,75 @@ export default function OwnerPromotionsPage() {
   const busy = uploading || create.isPending;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900">Promotions</h1>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/owner">My hostels</Link>
-        </Button>
-      </div>
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        title="Boost"
+        subtitle="Show a listing higher in search so more students see it."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Feature a listing</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {hostels.data?.length === 0 ? (
-            <p className="text-sm text-neutral-500">List a hostel first to promote it.</p>
-          ) : (
-            <form onSubmit={submit} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Hostel" htmlFor="promo_hostel" error={errors.hostel_id}>
-                  <Select id="promo_hostel" value={hostelId} onChange={(e) => setHostelId(e.target.value)}>
-                    <option value="">Select a hostel</option>
-                    {hostels.data?.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Plan" htmlFor="promo_plan">
-                  <Select id="promo_plan" value={plan} onChange={(e) => setPlan(e.target.value as PromotionPlan)}>
-                    {PLANS.map((p) => (
-                      <option key={p} value={p}>
-                        {PROMOTION_PLAN_LABEL[p]}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              </div>
-              <Field label="Payment method" htmlFor="promo_method">
-                <Select id="promo_method" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-                  {METHODS.map((m) => (
-                    <option key={m} value={m}>
-                      {PAYMENT_METHOD_LABEL[m]}
+      <PanelSection title="Boost a listing">
+        {isLoading || !user ? (
+          <p className="text-sm text-foreground-muted">Loading…</p>
+        ) : hostels.data?.length === 0 ? (
+          <p className="text-sm text-foreground-muted">List your hostel first to boost it.</p>
+        ) : (
+          <form onSubmit={submit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Hostel" htmlFor="promo_hostel" error={errors.hostel_id}>
+                <Select id="promo_hostel" value={hostelId} onChange={(e) => setHostelId(e.target.value)}>
+                  <option value="">Select a hostel</option>
+                  {hostels.data?.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
                     </option>
                   ))}
                 </Select>
               </Field>
-              {method !== 'cash' && (
-                <Field label="Payment screenshot" htmlFor="promo_proof" hint="Upload proof of payment.">
-                  <Input
-                    id="promo_proof"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  />
-                </Field>
-              )}
-              <Button type="submit" size="sm" disabled={busy}>
-                {busy ? 'Submitting…' : 'Submit for review'}
+              <Field label="Plan" htmlFor="promo_plan">
+                <Select id="promo_plan" value={plan} onChange={(e) => setPlan(e.target.value as PromotionPlan)}>
+                  {PLANS.map((p) => (
+                    <option key={p} value={p}>
+                      {PROMOTION_PLAN_LABEL[p]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            <Field label="Payment method" htmlFor="promo_method">
+              <Select id="promo_method" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
+                {METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {PAYMENT_METHOD_LABEL[m]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            {method !== 'cash' && (
+              <Field label="Payment screenshot" htmlFor="promo_proof" hint="Upload proof of payment.">
+                <Input
+                  id="promo_proof"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+              </Field>
+            )}
+            <div className="flex justify-end">
+              <Button type="submit" disabled={busy}>
+                {busy ? 'Sending…' : 'Send for approval'}
               </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+          </form>
+        )}
+      </PanelSection>
 
-      <div className="space-y-3">
-        {promotions.data?.map((p) => (
-          <Card key={p.id}>
-            <CardContent className="flex items-center justify-between gap-4 py-4">
+      {promotions.data && promotions.data.length > 0 ? (
+        <div className="space-y-3">
+          {promotions.data.map((p) => (
+            <Panel key={p.id} className="flex-row items-center justify-between gap-4 p-4 sm:p-5">
               <div>
-                <p className="font-medium text-neutral-900">{PROMOTION_PLAN_LABEL[p.plan]}</p>
-                <p className="mt-0.5 text-sm text-neutral-500">
+                <p className="font-semibold text-foreground">{PROMOTION_PLAN_LABEL[p.plan]}</p>
+                <p className="mt-0.5 text-sm text-foreground-muted">
                   {p.status === 'active' && p.expires_at
                     ? `Runs until ${formatDate(p.expires_at)} · ${p.impressions} views · ${p.clicks} clicks`
                     : p.rejection_reason
@@ -156,18 +147,21 @@ export default function OwnerPromotionsPage() {
                       : `Submitted ${formatDate(p.created_at)}`}
                 </p>
               </div>
-              <span
-                className={cn(
-                  'rounded-full px-2.5 py-0.5 text-xs font-medium',
-                  TONE[promotionStatusTone(p.status)]
-                )}
-              >
+              <StatusPill tone={promotionStatusTone(p.status)}>
                 {PROMOTION_STATUS_LABEL[p.status]}
-              </span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </main>
+              </StatusPill>
+            </Panel>
+          ))}
+        </div>
+      ) : (
+        !isLoading && (
+          <EmptyState
+            icon={Megaphone}
+            title="No boosts yet"
+            description="Boost a listing above to show it higher in search results."
+          />
+        )
+      )}
+    </div>
   );
 }

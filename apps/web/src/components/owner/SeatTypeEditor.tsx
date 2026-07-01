@@ -44,21 +44,21 @@ export function SeatTypeEditor({
   return (
     <div className="space-y-4">
       {rows.map((row, i) => (
-        <div key={i} className="rounded-lg border border-neutral-200 p-4">
+        <div key={i} className="rounded-lg border border-border p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-medium text-neutral-700">Seat type {i + 1}</span>
+            <span className="text-sm font-medium text-foreground-secondary">Seat type {i + 1}</span>
             {rows.length > 1 && (
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="text-neutral-400 hover:text-danger"
+                className="text-foreground-muted hover:text-error"
                 aria-label="Remove seat type"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
             <Field label="Occupancy">
               <Select
                 value={row.occupancy}
@@ -97,7 +97,7 @@ export function SeatTypeEditor({
               />
             </Field>
           </div>
-          <div className="mt-3 flex gap-4 text-sm text-neutral-700">
+          <div className="mt-3 flex gap-4 text-sm text-foreground-secondary">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -118,7 +118,7 @@ export function SeatTypeEditor({
         </div>
       ))}
 
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && <p className="text-xs text-error">{error}</p>}
 
       <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, emptySeatType()])}>
         <Plus className="h-4 w-4" /> Add seat type

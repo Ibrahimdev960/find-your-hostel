@@ -28,7 +28,7 @@ export function useSubmitOffer(ownerId: string) {
   return useMutation({
     mutationFn: (input: SubmitOfferInput) => submitOffer(ownerId, input),
     onSuccess: (o) => {
-      toast.success('Offer sent');
+      toast.success('Offer sent. The student will be notified.');
       void qc.invalidateQueries({ queryKey: requestKeys.open() });
       void qc.invalidateQueries({ queryKey: offerKeys.owner(ownerId) });
       void qc.invalidateQueries({ queryKey: offerKeys.forRequest(o.request_id) });

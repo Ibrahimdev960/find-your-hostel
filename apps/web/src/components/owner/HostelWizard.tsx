@@ -158,17 +158,17 @@ export function HostelWizard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{hostel ? 'Edit hostel' : 'List a new hostel'}</CardTitle>
+        <CardTitle>{hostel ? 'Edit hostel' : 'List your hostel'}</CardTitle>
         <ol className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
           {STEPS.map((label, i) => (
             <li
               key={label}
               className={
                 i + 1 === step
-                  ? 'font-semibold text-brand-600'
+                  ? 'font-semibold text-primary'
                   : i + 1 < step
                     ? 'text-success'
-                    : 'text-neutral-400'
+                    : 'text-foreground-muted'
               }
             >
               {i + 1}. {label}
@@ -222,13 +222,13 @@ export function HostelWizard({
         {step === 3 && (
           <>
             <div>
-              <span className="mb-2 block text-sm font-medium text-neutral-700">Facilities</span>
+              <span className="mb-2 block text-sm font-medium text-foreground-secondary">Facilities</span>
               {facilities.isLoading ? (
-                <p className="text-sm text-neutral-500">Loading…</p>
+                <p className="text-sm text-foreground-muted">Loading…</p>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
                   {facilities.data?.map((f) => (
-                    <label key={f.id} className="flex items-center gap-2 text-sm text-neutral-700">
+                    <label key={f.id} className="flex items-center gap-2 text-sm text-foreground-secondary">
                       <input
                         type="checkbox"
                         checked={facilityIds.includes(f.id)}
@@ -317,14 +317,14 @@ function MediaStep({ ownerId, hostelId }: { ownerId: string; hostelId: string })
 
   return (
     <div className="space-y-3">
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-3 text-sm text-neutral-600">
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-4 py-3 text-sm text-foreground-secondary">
         {uploading ? 'Uploading…' : 'Add photo'}
         <input type="file" accept="image/*" className="hidden" onChange={onFile} disabled={uploading} />
       </label>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {images.data?.map((img) => (
-          <div key={img.id} className="group relative overflow-hidden rounded-lg border border-neutral-200">
+          <div key={img.id} className="group relative overflow-hidden rounded-lg border border-border">
             <Image
               src={img.url}
               alt=""

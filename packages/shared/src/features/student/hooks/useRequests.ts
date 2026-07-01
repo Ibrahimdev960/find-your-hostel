@@ -46,7 +46,7 @@ export function useCreateRequest(studentId: string) {
   return useMutation({
     mutationFn: (input: CreateRequestInput) => createRequest(studentId, input),
     onSuccess: () => {
-      toast.success('Request posted');
+      toast.success('Your request is live. Owners can now send you offers — we’ll notify you.');
       void qc.invalidateQueries({ queryKey: requestKeys.student(studentId) });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -89,7 +89,7 @@ export function useRespondToOffer(studentId: string) {
   const accept = useMutation({
     mutationFn: (id: string) => acceptOffer(id),
     onSuccess: (o) => {
-      toast.success('Offer accepted');
+      toast.success('Offer accepted! Pay the deposit to reserve — other offers were declined.');
       invalidate(o.request_id);
     },
     onError: (e: Error) => toast.error(e.message),

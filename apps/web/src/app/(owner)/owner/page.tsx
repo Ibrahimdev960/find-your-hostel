@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { Building2, ShieldAlert } from 'lucide-react';
 import {
   useOwnerHostels,
   useSubmitHostel,
@@ -10,8 +12,13 @@ import {
 } from '@findyourhostel/shared/features/owner';
 import { useOwnerProfile } from '@findyourhostel/shared/features/auth';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { StatCard } from '@/components/layout/StatCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel } from '@/components/ui/panel';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SkeletonList } from '@/components/ui/skeleton';
+import { ConfirmDialog } from '@/components/ui/dialog';
 import { HostelStatusBadge } from '@/components/owner/HostelStatusBadge';
 
 export default function OwnerDashboardPage() {
@@ -22,70 +29,78 @@ export default function OwnerDashboardPage() {
   const publish = usePublishHostel();
   const unpublish = useUnpublishHostel();
   const del = useDeleteHostel(user?.id ?? '');
-
-  if (isLoading || !user) return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const approved = ownerProfile.data?.status === 'approved';
+  const data = hostels.data ?? [];
+  const published = data.filter((h) => h.status === 'published').length;
+  const drafts = data.filter((h) => h.status === 'draft').length;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900">My hostels</h1>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <Link href="/owner/requests">Requests</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/owner/bookings">Bookings</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/owner/promotions">Promotions</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/owner/hostels/new">List a new hostel</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        title="Dashboard"
+        subtitle="Manage your listings, bookings, and promotions."
+        actionLabel="List your hostel"
+        actionHref="/owner/hostels/new"
+        collapsibleTitle
+      />
 
       {!approved && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Verification required to publish</CardTitle>
-            <CardDescription>
-              You can create and edit listings now, but publishing needs an approved owner
-              account.{' '}
-              <Link href="/owner/onboarding" className="font-medium text-brand-600 hover:underline">
-                Complete verification →
+        <Panel className="flex-row items-start gap-3 border-warning/30 bg-warning/5 p-5">
+          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+          <div>
+            <p className="font-semibold text-foreground">You&apos;re almost there</p>
+            <p className="mt-1 text-sm text-foreground-muted">
+              You can create and edit listings now. Finish verification to let students see your
+              hostel.{' '}
+              <Link href="/owner/onboarding" className="font-semibold text-primary hover:underline">
+                Finish verification →
               </Link>
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            </p>
+          </div>
+        </Panel>
       )}
 
-      {hostels.isLoading ? (
-        <p className="text-sm text-neutral-500">Loading your hostels…</p>
-      ) : hostels.data?.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-neutral-500">
-            No hostels yet. Create your first listing to get started.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {hostels.data?.map((h) => (
-            <Card key={h.id}>
-              <CardContent className="flex items-center justify-between gap-4 py-4">
+      <section className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Listings" value={data.length} icon={Building2} />
+        <StatCard label="Published" value={published} />
+        <StatCard label="Drafts" value={drafts} />
+      </section>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">My hostels</h2>
+        {isLoading || !user || hostels.isLoading ? (
+          <SkeletonList count={3} />
+        ) : data.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title="No hostels yet"
+            description="Create your first listing to start receiving bookings."
+            action={
+              <Button asChild>
+                <Link href="/owner/hostels/new">List your hostel</Link>
+              </Button>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {data.map((h) => (
+              <div
+                key={h.id}
+                className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="truncate font-medium text-neutral-900">{h.name}</span>
+                    <span className="truncate font-semibold text-foreground">{h.name}</span>
                     <HostelStatusBadge status={h.status} />
                   </div>
-                  <p className="mt-0.5 truncate text-sm text-neutral-500">
+                  <p className="mt-0.5 truncate text-sm text-foreground-muted">
                     {[h.city, h.nearest_institution].filter(Boolean).join(' · ') || 'No location set'}
                   </p>
                 </div>
-                <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
-                  <Button asChild variant="outline" size="sm">
+                <div className="flex flex-wrap items-center justify-start gap-2 sm:shrink-0 sm:justify-end">
+                  <Button asChild variant="secondary" size="sm">
                     <Link href={`/owner/hostels/${h.id}/edit`}>Edit</Link>
                   </Button>
                   {h.status === 'draft' && (
@@ -105,7 +120,7 @@ export default function OwnerDashboardPage() {
                   )}
                   {h.status === 'published' && (
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => unpublish.mutate(h.id)}
                       disabled={unpublish.isPending}
@@ -114,20 +129,30 @@ export default function OwnerDashboardPage() {
                     </Button>
                   )}
                   <Button
-                    variant="ghost"
+                    variant="destructiveGhost"
                     size="sm"
-                    onClick={() => {
-                      if (confirm(`Delete “${h.name}”? This cannot be undone.`)) del.mutate(h.id);
-                    }}
+                    onClick={() => setDeleteTarget({ id: h.id, name: h.name })}
                   >
                     Delete
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </main>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={deleteTarget != null}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        title={deleteTarget ? `Delete “${deleteTarget.name}”?` : 'Delete listing?'}
+        description="This permanently removes the listing. This cannot be undone."
+        confirmLabel="Delete listing"
+        loading={del.isPending}
+        onConfirm={() =>
+          deleteTarget && del.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })
+        }
+      />
+    </div>
   );
 }

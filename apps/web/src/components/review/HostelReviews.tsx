@@ -14,9 +14,9 @@ export function HostelReviews({ hostelId, ownerId }: { hostelId: string; ownerId
   const user = useAuthStore((s) => s.user);
   const isOwner = user?.id === ownerId;
 
-  if (reviews.isLoading) return <p className="text-sm text-neutral-500">Loading reviews…</p>;
+  if (reviews.isLoading) return <p className="text-sm text-foreground-muted">Loading reviews…</p>;
   if (!reviews.data?.length) {
-    return <p className="text-sm text-neutral-500">No reviews yet.</p>;
+    return <p className="text-sm text-foreground-muted">No reviews yet.</p>;
   }
 
   return (
@@ -34,18 +34,18 @@ function ReviewItem({ review, canRespond }: { review: Review; canRespond: boolea
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border border-neutral-200 p-4">
+    <div className="rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-neutral-900">{review.reviewer_name ?? 'Student'}</span>
-        <span className="text-xs text-neutral-400">{formatDate(review.created_at)}</span>
+        <span className="font-medium text-foreground">{review.reviewer_name ?? 'Student'}</span>
+        <span className="text-xs text-foreground-muted">{formatDate(review.created_at)}</span>
       </div>
       <Stars value={review.rating_overall} className="mt-1" />
-      {review.comment && <p className="mt-2 text-sm text-neutral-700">{review.comment}</p>}
+      {review.comment && <p className="mt-2 text-sm text-foreground-secondary">{review.comment}</p>}
 
       {review.owner_response && (
-        <div className="mt-3 rounded-md bg-neutral-50 p-3 text-sm">
-          <p className="font-medium text-neutral-700">Owner response</p>
-          <p className="mt-0.5 text-neutral-600">{review.owner_response}</p>
+        <div className="mt-3 rounded-md bg-background-secondary p-3 text-sm">
+          <p className="font-medium text-foreground-secondary">Owner response</p>
+          <p className="mt-0.5 text-foreground-muted">{review.owner_response}</p>
         </div>
       )}
 
@@ -55,7 +55,7 @@ function ReviewItem({ review, canRespond }: { review: Review; canRespond: boolea
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="text-xs text-brand-600 hover:underline"
+            className="text-xs text-primary hover:underline"
           >
             Respond
           </button>

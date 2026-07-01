@@ -6,6 +6,7 @@ import toastLib from 'react-hot-toast';
 import { setToastAdapter } from '@findyourhostel/shared';
 import { QueryProvider } from './QueryProvider';
 import { AuthProvider } from './AuthProvider';
+import { ThemeProvider } from './ThemeProvider';
 import { NotificationsRealtime } from '@/components/notifications/NotificationsRealtime';
 
 /** Wire the shared toast abstraction to react-hot-toast (once). */
@@ -22,12 +23,24 @@ function useToastAdapter() {
 export function Providers({ children }: { children: ReactNode }) {
   useToastAdapter();
   return (
-    <QueryProvider>
-      <AuthProvider>
-        <NotificationsRealtime />
-        {children}
-        <Toaster position="top-center" />
-      </AuthProvider>
-    </QueryProvider>
+    <ThemeProvider>
+      <QueryProvider>
+        <AuthProvider>
+          <NotificationsRealtime />
+          {children}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: 'var(--card)',
+                color: 'var(--foreground)',
+                border: '1px solid var(--border)',
+                borderRadius: '16px',
+              },
+            }}
+          />
+        </AuthProvider>
+      </QueryProvider>
+    </ThemeProvider>
   );
 }

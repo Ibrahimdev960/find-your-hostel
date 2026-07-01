@@ -35,17 +35,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <AdminGuard>
       <div className="min-h-screen">
-        <header className="flex items-center gap-6 border-b border-neutral-200 bg-white px-6 py-3">
-          <span className="text-sm font-semibold text-brand-700">Find Your Hostel · Admin</span>
-          <nav className="flex gap-4 text-sm text-neutral-600">
+        <header className="flex flex-col gap-2 border-b border-neutral-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6">
+          <span className="shrink-0 text-sm font-semibold text-brand-700">
+            Find Your Hostel · Admin
+          </span>
+          <nav className="-mx-4 flex gap-4 overflow-x-auto whitespace-nowrap px-4 text-sm text-neutral-600 sm:mx-0 sm:px-0">
             {NAV.map((item) => (
-              <Link key={item.href} href={item.href} className="hover:text-neutral-900">
+              <Link key={item.href} href={item.href} className="shrink-0 hover:text-neutral-900">
                 {item.label}
               </Link>
             ))}
           </nav>
         </header>
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </AdminGuard>
   );

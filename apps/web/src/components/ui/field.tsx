@@ -22,8 +22,8 @@ export function Field({
     <div className={cn('space-y-1.5', className)}>
       {label && <Label htmlFor={htmlFor}>{label}</Label>}
       {children}
-      {hint && !error && <p className="text-xs text-neutral-500">{hint}</p>}
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {hint && !error && <p className="text-xs text-foreground-muted">{hint}</p>}
+      {error && <p className="text-xs text-error">{error}</p>}
     </div>
   );
 }
@@ -35,7 +35,7 @@ export const Select = React.forwardRef<
   <select
     ref={ref}
     className={cn(
-      'flex h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-50',
+      'flex h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:opacity-60',
       className
     )}
     {...props}

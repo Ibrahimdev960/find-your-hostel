@@ -45,7 +45,7 @@ export function useCreateBooking(studentId: string) {
   return useMutation({
     mutationFn: (input: CreateBookingInput) => createBooking(studentId, input),
     onSuccess: (b) => {
-      toast.success('Booking requested');
+      toast.success('Booking started! Check My Bookings for your next step.');
       void qc.invalidateQueries({ queryKey: bookingKeys.student(studentId) });
       void qc.invalidateQueries({ queryKey: searchKeys.availability(b.hostel_id) });
     },
@@ -58,7 +58,7 @@ export function useCancelBooking(studentId: string) {
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason?: string }) => cancelBooking(id, reason),
     onSuccess: (b) => {
-      toast.success('Booking cancelled');
+      toast.success('Booking cancelled. Your seat has been released.');
       void qc.invalidateQueries({ queryKey: bookingKeys.student(studentId) });
       void qc.invalidateQueries({ queryKey: bookingKeys.detail(b.id) });
       void qc.invalidateQueries({ queryKey: searchKeys.availability(b.hostel_id) });

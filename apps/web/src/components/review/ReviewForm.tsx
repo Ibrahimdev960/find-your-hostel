@@ -46,7 +46,7 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
   return (
     <form onSubmit={submit} className="space-y-3">
       <StarInput value={overall} onChange={setOverall} label="Overall" />
-      {errors.rating_overall && <p className="text-xs text-danger">Pick an overall rating</p>}
+      {errors.rating_overall && <p className="text-xs text-error">Pick an overall rating</p>}
       {CRITERIA.map((c) => (
         <StarInput
           key={c.key}

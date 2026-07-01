@@ -17,8 +17,8 @@ export function RecommendedRow({ limit = 6 }: { limit?: number }) {
   if (isLoading) {
     return (
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-900">Recommended for you</h2>
-        <div className="h-24 animate-pulse rounded-xl bg-neutral-100" />
+        <h2 className="text-lg font-semibold text-foreground">Recommended for you</h2>
+        <div className="h-24 animate-pulse rounded-2xl bg-background-secondary" />
       </section>
     );
   }
@@ -26,7 +26,7 @@ export function RecommendedRow({ limit = 6 }: { limit?: number }) {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold text-neutral-900">Recommended for you</h2>
+      <h2 className="text-lg font-semibold text-foreground">Recommended for you</h2>
       <div className="space-y-3">
         {data.map((hostel) => (
           <HostelResultCard key={hostel.id} hostel={hostel} />

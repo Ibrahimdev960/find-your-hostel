@@ -7,7 +7,7 @@ export default function OwnerOnboardingPage() {
   const { user, isLoading } = useRequireAuth('owner');
 
   if (isLoading || !user) {
-    return <div className="p-10 text-sm text-neutral-500">Loading…</div>;
+    return <div className="p-10 text-sm text-foreground-muted">Loading…</div>;
   }
 
   return (

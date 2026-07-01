@@ -45,12 +45,12 @@ export function SearchFilters({
           onChange={(e) => setLocationQuery(e.target.value)}
         />
         {geo.results.length > 0 && (
-          <ul className="mt-1 max-h-40 overflow-auto rounded-md border border-neutral-200 bg-white text-sm">
+          <ul className="mt-1 max-h-40 overflow-auto rounded-xl border border-border bg-card text-sm">
             {geo.results.map((r) => (
               <li key={`${r.lat},${r.lng}`}>
                 <button
                   type="button"
-                  className="block w-full truncate px-3 py-1.5 text-left hover:bg-neutral-50"
+                  className="block w-full truncate px-3 py-1.5 text-left hover:bg-background-secondary"
                   onClick={() => {
                     onChange({ ...filters, lat: r.lat, lng: r.lng, sort: 'distance' });
                     setLocationQuery(r.label.split(',')[0] ?? r.label);
@@ -64,7 +64,7 @@ export function SearchFilters({
         )}
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
         <Field label="Category">
           <Select
             value={filters.hostel_type ?? ''}
@@ -73,10 +73,10 @@ export function SearchFilters({
             <option value="">Any</option>
             <option value="boys">Boys</option>
             <option value="girls">Girls</option>
-            <option value="co_living">Co-living</option>
+            <option value="co_living">Mixed / Family</option>
           </Select>
         </Field>
-        <Field label="Seat type">
+        <Field label="Room type">
           <Select
             value={filters.seat_type ?? ''}
             onChange={(e) => set('seat_type', (e.target.value || undefined) as Filters['seat_type'])}
@@ -117,13 +117,15 @@ export function SearchFilters({
       </Field>
 
       <div>
-        <span className="mb-2 block text-sm font-medium text-neutral-700">Amenities</span>
+        <span className="mb-2 block text-sm font-medium text-foreground-secondary">
+          What&apos;s included
+        </span>
         {facilities.isLoading ? (
-          <p className="text-sm text-neutral-500">Loading…</p>
+          <p className="text-sm text-foreground-muted">Loading…</p>
         ) : (
           <div className="grid grid-cols-2 gap-1.5">
             {facilities.data?.map((f) => (
-              <label key={f.id} className="flex items-center gap-2 text-sm text-neutral-700">
+              <label key={f.id} className="flex items-center gap-2 text-sm text-foreground-secondary">
                 <input
                   type="checkbox"
                   checked={(filters.facility_ids ?? []).includes(f.id)}

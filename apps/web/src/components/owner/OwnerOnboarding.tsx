@@ -39,7 +39,7 @@ export function OwnerOnboarding({ ownerId }: { ownerId: string }) {
   });
 
   if (ownerProfile.isLoading) {
-    return <div className="p-10 text-sm text-neutral-500">Loading verification status…</div>;
+    return <div className="p-10 text-sm text-foreground-muted">Loading verification status…</div>;
   }
 
   const profile = ownerProfile.data;
@@ -63,7 +63,7 @@ export function OwnerOnboarding({ ownerId }: { ownerId: string }) {
   if (status === 'suspended') {
     return (
       <StatusCard
-        icon={<XCircle className="h-6 w-6 text-danger" />}
+        icon={<XCircle className="h-6 w-6 text-error" />}
         title="Account suspended"
         description="Your owner account is currently suspended. Please contact support for details."
       />
@@ -117,7 +117,7 @@ export function OwnerOnboarding({ ownerId }: { ownerId: string }) {
             : 'Verify your identity to start listing hostels.'}
         </CardDescription>
         {status === 'rejected' && profile?.rejection_reason && (
-          <p className="mt-2 rounded-md bg-danger/5 px-3 py-2 text-sm text-danger">
+          <p className="mt-2 rounded-md bg-error/5 px-3 py-2 text-sm text-error">
             Reason: {profile.rejection_reason}
           </p>
         )}

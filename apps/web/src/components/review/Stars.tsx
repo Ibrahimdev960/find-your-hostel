@@ -10,7 +10,7 @@ export function Stars({ value, className }: { value: number; className?: string 
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={cn('h-4 w-4', n <= Math.round(value) ? 'fill-warning text-warning' : 'text-neutral-300')}
+          className={cn('h-4 w-4', n <= Math.round(value) ? 'fill-warning text-warning' : 'text-border')}
         />
       ))}
     </span>
@@ -29,7 +29,7 @@ export function StarInput({
 }) {
   return (
     <div className="flex items-center justify-between">
-      {label && <span className="text-sm text-neutral-600">{label}</span>}
+      {label && <span className="text-sm text-foreground-secondary">{label}</span>}
       <span className="inline-flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -39,7 +39,7 @@ export function StarInput({
             onClick={() => onChange(n)}
           >
             <Star
-              className={cn('h-5 w-5', n <= value ? 'fill-warning text-warning' : 'text-neutral-300 hover:text-warning')}
+              className={cn('h-5 w-5', n <= value ? 'fill-warning text-warning' : 'text-border hover:text-warning')}
             />
           </button>
         ))}
